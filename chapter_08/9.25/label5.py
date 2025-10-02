@@ -1,7 +1,7 @@
 from tkinter import *
 
 root = Tk()
-photo=PhotoImage(file="wl.gif")
+photo=PhotoImage(file="9.25/wl.gif")
 w=Label(root,image=photo, justify="left").pack(side="right")
 message="""삶이 그대를 속일지라도
 슬퍼하거나 노하지 말라!
