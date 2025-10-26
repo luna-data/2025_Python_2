@@ -22,6 +22,7 @@ class BankAccount:
 
     def set_balance(self,amount): #잔액 직접 수정
         if amount>=0:
+            self.__balance=amount
             return self.__balance
 
         
