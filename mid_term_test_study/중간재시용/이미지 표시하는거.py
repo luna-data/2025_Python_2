@@ -5,7 +5,7 @@ import os
 def draw_image():
     global img  # 전역 참조 유지
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    path = os.path.join(base_dir, "common.jpg")  # JPG 그대로
+    path = os.path.join(base_dir, "common.png")  # JPG 그대로
     pil_img = Image.open(path)
     img = ImageTk.PhotoImage(pil_img)
     canvas.create_image(20, 20, anchor=NW, image=img)

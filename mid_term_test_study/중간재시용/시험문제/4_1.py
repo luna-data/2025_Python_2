@@ -16,12 +16,12 @@ root.geometry("400x400")
 shape=IntVar(value=1)
 
 canvas=Canvas(root, width=300, height=300)
-canvas.grid(row=0,column=1,columspan=3)
+canvas.pack()
 
 
-Radiobutton(root, text="사각형",padx=20, variable=shape,value=1).gird(row=0,column=0,sticky="W")
-Radiobutton(root, text="원",padx=20, variable=shape,value=2).gird(row=0,column=1,sticky="W")
-Radiobutton(root, text="텍스트",padx=20, variable=shape,value=3).gird(row=0,column=2,sticky="W")
-Button(root, text="그리기", command=delete_can).grid(row=1,column=1,columnspan=3)
+Radiobutton(root, text="사각형",padx=20, variable=shape,value=1).pack()
+Radiobutton(root, text="원",padx=20, variable=shape,value=2).pack()
+Radiobutton(root, text="텍스트",padx=20, variable=shape,value=3).pack()
 
+Button(root, text="그리기", command=delete_can).pack()
 root.mainloop()

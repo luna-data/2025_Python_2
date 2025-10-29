@@ -17,11 +17,11 @@ root.title("중간고사 5번")
 root.geometry("250x150")
 
 def login():
-    Student(e1.get,e2.get)
-    if e1.get in students:
-        print(f"{e2.get}학생, 로그인 성공!")
+    stu=Student(e1.get(),e2.get())
+    if stu in students:
+        lable.config(text=f"{stu.name}학생, 로그인 성공!")
     else:
-        print("등록되지 않은 학번입니다.")
+        lable.config(text="등록되지 않은 학생입니다.")
 
 Label(root, text="학번").grid(row=0)
 Label(root, text="이름").grid(row=1)
@@ -30,6 +30,9 @@ e1=Entry(root)
 e2=Entry(root)
 e1.grid(row=0, column=1)
 e2.grid(row=1, column=1)
+
+lable=Label(root, text="",fg="blue" )
+lable.grid(row=2, column=0, columnspan=2, pady=5)
 
 Button(root, text="로그인", command=login).grid(row=3, column=0, sticky="w", pady=4) #간격
 Button(root, text="취소", command=root.quit).grid(row=3, column=1, sticky="w", pady=4)

@@ -11,8 +11,12 @@ def file_open():
     img = ImageTk.PhotoImage(pil_img)
     canvas.create_image(20, 20, anchor=NW, image=img)
 
+canvas=Canvas(root,width=200,height=200)
+canvas.pack()
 def delete_file():
     root.delete("all")
     
-Button(root,text="파일열기",command=file_open).grid(row=0,column=0,padx=5)
-Button(root,text="지우기",command=delete_file).grid(row=0,column=1,padx=5)
+Button(root,text="파일열기",command=file_open).pack()
+Button(root,text="지우기",command=delete_file).pack()
+
+root.mainloop()

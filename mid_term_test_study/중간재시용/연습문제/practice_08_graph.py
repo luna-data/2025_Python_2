@@ -1,7 +1,9 @@
 import tkinter as tk
 from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import FigureCanvaasTKAgg
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
+
+#시험볼 때 실제로 작성헤야하는 부분!!!
 def plot_graph():
     x=float(x_entry.get())
     y=float(y_entry.get())
@@ -10,6 +12,8 @@ def plot_graph():
     ax.clear()
     ax.plot(x_data, y_data, marker='o',linestyle='-')
     canvas.draw()
+#**********************************************************
+
 
 root=tk.Tk()
 root.title("Dynamic Line Graph")
