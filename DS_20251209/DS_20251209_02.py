@@ -1,41 +1,44 @@
-class BankAccount:
-    def __init__(self,owner,balance=0):
-        self.owner=owner
-        self.__balance=balance
-        print(f"{self.owner} 계좌가 생성되었습니다.")
+from tkinter import *
+from PIL import ImageTk, Image
+import os
 
-    def deposit(self,amount):
-        if amount>0:
-            self.__balance+=amount
-            print(f"{self.owner} 통장에 {amount}원이 입금되었습니다.")
-    
-    def withdraw(self, amount):
-        if self.__balance>amount:
-            self.__balance-=amount
-            print(f"{self.owner} 통장에서 {amount}원이 출금되었습니다.")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-        else:
-            print("잔액부족")
+# 도형을 그리는 함수
+def rectang():
+    canvas.delete("all")
+    canvas.create_rectangle(50, 50, 150, 150, fill="red") 
 
-    def get_balance(self): #현재잔액
-        return self.__balance
+def one():
+    canvas.delete("all")
+    canvas.create_oval(200, 80, 300, 180, fill="blue")
 
-    def set_balance(self,amount): #잔액 직접 수정
-        if amount>=0:
-            self.__balance=amount
-            return self.__balance
+def draw_image():
+    global img
+    image_path=os.path.join(BASE_DIR,"common_3.jpg")
+    pil_img = Image.open(image_path)
+    img = ImageTk.PhotoImage(pil_img)
+    canvas.create_image(20,20,anchor=NW,image=img)
+    #canvas.create_text(200, 150, text="Hello Duksung", fill="blue", font=("Helvetica", 20, "bold"))
 
-        
-a=BankAccount("A")
-b=BankAccount("B")
+def clean():
+    canvas.delete("all")
 
-a.deposit(100)
-b.deposit(200)
-a.withdraw(30)
-b.withdraw(50)
+# 메인 윈도우 생성
+root = Tk()
+root.title("중간고사 7번")
+root.geometry("420x440")
 
-print(f"{a.owner} 계좌의 현재 잔액:", a.get_balance())
-print(f"{b.owner} 계좌의 현재 잔액:",b.get_balance())
+# 캔버스
+canvas = Canvas(root, width=400, height=320, bg="white")
+canvas.pack()
 
-a.set_balance(500)
-print(f"{a.owner} 계좌의 수정된 잔액:",a.get_balance())
+frame = Frame(root)
+frame.pack(pady=10)
+
+Button(frame, text="사각형", command=rectang).pack(side="left", padx=10)
+Button(frame, text="원", command=one).pack(side="left", padx=10)
+Button(frame,text="그림", command=draw_image).pack(side="left", padx=10)
+Button(frame, text="지우기", command=clean).pack(side="left", pady=5)
+Label(root, text="버튼을 눌러 도형을 선택하세요.",fg="black").pack()
+root.mainloop()
