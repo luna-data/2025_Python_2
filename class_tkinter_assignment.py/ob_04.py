@@ -7,10 +7,13 @@ class Course:
         self.scores.append(s)
 
     def avg(self):
-        return sum(self.scores)/len(self.scores)
+        if len(self.scores)>0:
+            return sum(self.scores)/len(self.scores)
+        else:
+            return 0
     
     def info(self):
-        print(str((f"과목:{self.name}, 평균:{self.avg()}")))
+        return f"과목:{self.name}, 평균:{self.avg():.1f}"
 
 c=Course("파이썬")
 c.add_score(80)

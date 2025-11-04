@@ -16,9 +16,7 @@ class Book:
         if self.borrowed:
             print(f"{self.title}이(가) 반납되었습니다.")
             self.borrowed=False
-        #else:
-        #print(f"{self.title}이(가) 대출되지 않은 상태입니다.")
-
+            
 b1 = Book("파이썬프로그래밍", "홍길동")
 b1.borrow()
 b1.borrow() #과제내용 중 결과와 같게 하려면 한 번 더 호출이 필요함
