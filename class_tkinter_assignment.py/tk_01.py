@@ -17,7 +17,7 @@ class Book:
 
     def return_book(self):
         if self.borrowed:
-            lable1.config(text=f"{e1.get()}이(가) 반납되었습니다",fg="green")
+            lable1.config(text=f"{self.title}이(가) 반납되었습니다",fg="green")
             self.borrowed=False
 
         else:
