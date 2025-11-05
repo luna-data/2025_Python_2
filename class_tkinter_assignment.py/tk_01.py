@@ -9,10 +9,10 @@ class Book:
     def borrow(self):
         if not self.borrowed:
             self.borrowed=True
-            lable1.config(text=f"{e1.get()}이(가) 대출되었습니다",fg="blue")
+            lable1.config(text=f"{self.title}이(가) 대출되었습니다",fg="blue")
 
         else:
-            lable1.config(text=f"{e1.get()}은(는) 이미 대출중입니다.",fg="blue")
+            lable1.config(text=f"{self.title}은(는) 이미 대출중입니다.",fg="blue")
 
 
     def return_book(self):
@@ -21,7 +21,7 @@ class Book:
             self.borrowed=False
 
         else:
-            lable1.config(text=f"{e1.get()}은(는) 대출되지 않은 상태입니다.",fg="green")
+            lable1.config(text=f"{self.title}은(는) 대출되지 않은 상태입니다.",fg="green")
 
 
 def dachul():
@@ -35,6 +35,7 @@ def return_act():
     
 root=Tk()
 root.title("도서 대출 관리 프로그램")
+root.geometry("380x220")
 
 Label(root,text="도서 대출 관리 시스템", font=("맑은 고딕", 20, "bold")).pack(pady=10)
 

@@ -10,16 +10,14 @@ class Book:
         if not self.borrowed:
             self.borrowed=True
             lable1.config(text=f"{self.title}이(가) 대출되었습니다",fg="blue")
-            #현재 대출상태를 나타내기 위함!!
-        else:
+            
+        else: 
             lable1.config(text=f"{self.title}은(는) 이미 대출중입니다.",fg="red")
         
     def return_book(self):
         if self.borrowed:
-            borrowed_books.remove(book_set)
             lable1.config(text=f"{self.title}이(가) 반납되었습니다",fg="green")
             self.borrowed=False
-            return borrowed_books
 
         else:
             lable1.config(text=f"{self.title}은(는) 대출 목록에 없습니다.",fg="red")
@@ -29,43 +27,36 @@ borrowed_books=[]
 
 #이벤트핸들러
 def update_borrowed_list():
-    global last
-    last=""
-    borrowed_books.append(book_set)
-       # borrowed_books.append(title(author))
-    for i in borrowed_books:
-        last+=i
-    lable2.config(text=f"대출 현황:{last}")
+    if book.borrowed==True:
+        books=", ".join([f"{title}({author})" for b in borrowed_books])
+        borrowed_books.append(title(author))
+        return borrowed_books
+    else:
+        books="현재 대출 중인 도서가 없습니다."
+
 
 
 def dachul():
-    global title,author,book,book_set
+    global title,author,book
     title=e1.get().strip()
     author=e2.get().strip()
-    book_set=f"{title}({author})"
-    print(book_set)
-    if not title or not author:
-        lable1.config(text="제목과 저자를 모두 입력해주세요", fg="red")
-    else:
-        book=Book(title,author)
-        book.borrow()
-        #condition=book.borrow()
-        #lable1.config(text=condition, fg="blue")
-        update_borrowed_list()
+
+    book=Book(title,author)
+    condition=book.borrow()
+    borrowed_books.append(book)
+    lable1.config(text=condition, fg="blue")
+    update_borrowed_list()
 
 def return_act():
     if not title or not author:
         lable1.config(text="제목과 저자를 모두 입력해주세요", fg="red")
-
-    else:
-        if book_set not in borrowed_books:
+    for b in borrowed_books:
+        if b.title == title and b.author == author:
             lable1.config(text=f"{title}이(가) 이미 반납되었습니다.", fg="red")
             return
-        else:
-            book.return_book()
         
-    #condition=book.return_book()
-    #lable1.config(text=condition, fg="red")
+    condition=book.return_book()
+    lable1.config(text=condition, fg="red")
 
 
 #GUI
