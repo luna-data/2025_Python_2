@@ -9,63 +9,62 @@ class Book:
     def borrow(self):
         if not self.borrowed:
             self.borrowed=True
-            lable1.config(text=f"{self.title}이(가) 대출되었습니다",fg="blue")
-            #현재 대출상태를 나타내기 위함!!
-        else:
-            lable1.config(text=f"{self.title}은(는) 이미 대출중입니다.",fg="red")
+          
         
     def return_book(self):
-        if self.borrowed:
-            borrowed_books.remove(book_set)
-            lable1.config(text=f"{self.title}이(가) 반납되었습니다",fg="green")
-            self.borrowed=False
-            return borrowed_books
-
-        else:
-            lable1.config(text=f"{self.title}은(는) 대출 목록에 없습니다.",fg="red")
+        self.borrowed=False
 
 #대출현황리스트
 borrowed_books=[]
 
 #이벤트핸들러
 def update_borrowed_list():
-    global last
-    last=""
-    borrowed_books.append(book_set)
-       # borrowed_books.append(title(author))
-    for i in borrowed_books:
-        last+=i
-    lable2.config(text=f"대출 현황:{last}")
+    if borrowed_books:
+        joined = ", ".join([f"{b.title}({b.author})" for b in borrowed_books])
+        lable2.config(text=f"대출 현황: {joined}")
+    else:
+        lable2.config(text="대출 현황: 현재 대출 중인 도서가 없습니다.")
 
+def find_book(title:str,author:str):
+    for b in borrowed_books:
+        if b.title==title and b.author==author:
+            return b
+    return None
 
 def dachul():
-    global title,author,book,book_set
     title=e1.get().strip()
     author=e2.get().strip()
-    book_set=f"{title}({author})"
-    print(book_set)
+
     if not title or not author:
         lable1.config(text="제목과 저자를 모두 입력해주세요", fg="red")
-    else:
-        book=Book(title,author)
-        book.borrow()
-        #condition=book.borrow()
-        #lable1.config(text=condition, fg="blue")
-        update_borrowed_list()
+        return
+    if find_book(title, author) is not None:
+        lable1.config(text=f"『{title}』은(는) 이미 대출중입니다.", fg="red")
+        return
+    
+    book=Book(title,author)
+    book.borrow()
+    borrowed_books.append(book)
+    lable1.config(text=f"{title}이(가) 대출되었습니다", fg="blue")
+    update_borrowed_list()
 
 def return_act():
+    title=e1.get().strip()
+    author=e2.get().strip()
+
     if not title or not author:
         lable1.config(text="제목과 저자를 모두 입력해주세요", fg="red")
+        return
+    b = find_book(title, author)
 
-    else:
-        if book_set not in borrowed_books:
-            lable1.config(text=f"{title}이(가) 이미 반납되었습니다.", fg="red")
-            return
-        else:
-            book.return_book()
-        
-    #condition=book.return_book()
-    #lable1.config(text=condition, fg="red")
+    if b is None:
+        lable1.config(text=f"『{title}』은(는) 대출 목록에 없습니다.", fg="red")
+        return
+
+    b.return_book()         
+    borrowed_books.remove(b)     
+    lable1.config(text=f"{title}이(가) 반납되었습니다", fg="green")
+    update_borrowed_list()
 
 
 #GUI
