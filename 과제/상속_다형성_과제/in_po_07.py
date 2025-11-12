@@ -96,7 +96,7 @@ right.pack(side="left", expand=True)
 
 #5 left
 Label(left,text='메뉴 목록').pack(anchor='w')
-menu_list=Listbox(left,width=25,height=20)
+menu_list=Listbox(left,width=35,height=20)
 menu_list.pack(expand=True)
 for menu in menu_items:
     menu_list.insert(END, str(menu)) #리스트박스에 추가하는거! 리스트 마지막에 맨 아랫줄에 생성!
@@ -112,7 +112,7 @@ Button(ctrl,text="장바구니 담기",command=add_cart).pack(side='left')
 
 #6 right
 Label(right,text="장바구니").pack(anchor='w')
-cart_list=Listbox(right,width=25,height=20)
+cart_list=Listbox(right,width=35,height=20)
 cart_list.pack(expand=True)
 
 # pack을 한 줄에 다 써서 오류가 계속 생김. 같은 실수를 계속 반복함
