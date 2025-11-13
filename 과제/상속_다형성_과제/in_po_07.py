@@ -110,15 +110,15 @@ s=Spinbox(ctrl, from_=1, to=30, width=5, textvariable=q_var, justify="center")
 s.pack(side="left")
 Button(ctrl,text="장바구니 담기",command=add_cart).pack(side='left')
 
-#6 right
+#6 right 
 Label(right,text="장바구니").pack(anchor='w')
 cart_list=Listbox(right,width=35,height=20)
 cart_list.pack(expand=True)
 
 # pack을 한 줄에 다 써서 오류가 계속 생김. 같은 실수를 계속 반복함
 last=Frame(right)
-last.pack(side='left')
-label_total=Label(last,text="합계: 0원")
+label_total=last.pack(side='left')
+Label(last,text="합계: 0원")
 label_total.pack(side='left')
 
 b_frame=Frame(last)
