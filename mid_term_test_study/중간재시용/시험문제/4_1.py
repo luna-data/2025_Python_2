@@ -15,7 +15,7 @@ root.title("중간고사 4번")
 root.geometry("400x400")
 shape=IntVar(value=1)
 
-canvas=Canvas(root, width=300, height=300)
+canvas=Canvas(root, width=300, height=300,bg="white")
 canvas.pack()
 
 

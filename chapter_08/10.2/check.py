@@ -5,10 +5,10 @@ Label(root, text="선호하는 언어를 모두 선택하시오:").grid(row=0, s
 value1=IntVar()
 Checkbutton(root,text="Python",variable=value1).grid(row=1, sticky=W)
 value2=IntVar()
-Checkbutton(root,text="C",variable=value1).grid(row=2, sticky=W)
+Checkbutton(root,text="C",variable=value2).grid(row=2, sticky=W)
 value3=IntVar()
-Checkbutton(root,text="Java",variable=value1).grid(row=3, sticky=W)
+Checkbutton(root,text="Java",variable=value3).grid(row=3, sticky=W)
 value4=IntVar()
-Checkbutton(root,text="Swift",variable=value1).grid(row=4, sticky=W)
+Checkbutton(root,text="Swift",variable=value4).grid(row=4, sticky=W)
 
 root.mainloop()
