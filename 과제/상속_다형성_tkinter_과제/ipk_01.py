@@ -30,7 +30,7 @@ Label(root,text="버튼을 눌러보세요.").pack()
 car=Car('car1')
 truck=Truck('truck1')
 #StringVar -> 
-msg = StringVar()
+#msg = StringVar()
 
 def car_text():
     text1=car.drive()
