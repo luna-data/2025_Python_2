@@ -25,7 +25,7 @@ class Truck(Vehicle):
 root=Tk()
 root.title("문제1")
 root.geometry('400x300')
-Label(root,text="버튼을 눌러보세요.").pack()
+Label(root,text="버튼을 눌러보세요.",font=("맑은 고딕", 10)).pack()
 
 car=Car('car1')
 truck=Truck('truck1')
@@ -42,10 +42,10 @@ def truck_text():
 
 frame=Frame(root)
 frame.pack(pady=10)
-Button(frame,text="자동차 주행",command=car_text).pack(side="left")
-Button(frame,text="트럭 주행",command=truck_text).pack(side="left")
+Button(frame,text="자동차 주행",command=car_text).grid(row=0, column=0, padx=10, pady=5)
+Button(frame,text="트럭 주행",command=truck_text).grid(row=0, column=1, padx=10, pady=5)
 
-label1=Label(root,text='')
+label1=Label(root,text='',font=("맑은 고딕", 10))
 label1.pack()
 
 root.mainloop()
