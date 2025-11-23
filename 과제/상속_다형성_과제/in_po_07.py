@@ -119,7 +119,7 @@ cart_list.pack(expand=True)
 last=Frame(right)
 label_total=last.pack(side='left')
 Label(last,text="합계: 0원")
-label_total.pack(side='left')
+#label_total.pack(side='left')
 
 b_frame=Frame(last)
 b_frame.pack(side='right')
