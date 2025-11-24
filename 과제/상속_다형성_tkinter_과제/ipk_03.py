@@ -40,10 +40,10 @@ class Circle(Shape):
 # 메인 윈도우 생성
 root = Tk()
 root.title("문제3")
-root.geometry("400x400")
+root.geometry("300x220")
 
 # 캔버스
-canvas = Canvas(root, width=300, height=220, bg="white")
+canvas = Canvas(root,bg="white")
 canvas.pack()
 label1=Label(root,text="도형을 선택하고 그리기를 누르세요.")
 label1.pack()

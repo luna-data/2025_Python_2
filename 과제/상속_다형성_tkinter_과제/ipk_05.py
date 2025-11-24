@@ -91,6 +91,6 @@ frame4.pack(pady=10)
 label1=Label(frame4,text="",fg="blue")
 label1.pack()
 
-Button(frame4,text="등록하기",command=sign).pack(side="left")
-Button(frame4,text="초기화",command=reset).pack(side="left")
+Button(frame4,text=" 등록하기",command=sign).pack(side="left",padx=10)
+Button(frame4,text=" 초기화",command=reset).pack(side="left",padx=10)
 root.mainloop()

@@ -22,7 +22,7 @@ root.title("문제4")
 root.geometry("380x280")
 
 stu=Student("홍길동")
-Label(root,text=f"학생:{stu.name}", font=("맑은 고딕", 20, "bold")).pack()
+Label(root,text=f"학생:{stu.name}", font=("맑은 고딕", 10, "bold")).pack()
 frame=Frame(root)
 frame.pack()
 
@@ -52,13 +52,13 @@ def chogi():
     value2.set(0)
     value3.set(0)
     label1.config(text="모든 선택을 해제했습니다.")
-
+    
 label1=Label(root,text="과목을 선택하고 [등록하기]를 누르세요.")
-label1.pack()
+label1.pack(pady=10)
 
 frame2=Frame(root)
 frame2.pack()
-Button(frame2,text="등록하기",command=danglog).pack(side="left")
-Button(frame2,text="초기화",command=chogi).pack(side="left")
+Button(frame2,text="등록하기",command=danglog).pack(side="left",padx=10)
+Button(frame2,text="초기화",command=chogi).pack(side="left",padx=10)
 
 root.mainloop()
