@@ -4,6 +4,7 @@ class Animal:
 
 class Dog:
     def __init__(self):
+        #super().__init__(인스턴스 변수들), 그런데 여기서 해즈어 관계는 애니멀을 가집니다
         self.animal=Animal()
 
     def speak(self):
