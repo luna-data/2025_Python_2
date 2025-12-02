@@ -103,31 +103,32 @@ ball=Ball(canvas,paddle,'red')
 
 label=Label(root,text="",font=("맑은 고딕", 20, "bold"))
 label.pack()
-
-
-while True:
-    if ball.hit_bottom==False: #게임 오버가 아닐때만 실행
-        ball.draw()
-        paddle.draw()
-    root.update_idletasks()
-    root.update()
-    time.sleep(0.01)
-
-    if ball.hit_bottom==True:
-        label.config(text="GAME OVER")
-        #msgbox.showwarning("게임", "GAME OVER")
-        Button(root,text="재시작",command="restart").pack()
-        break
+game_running=True
 
 def restart():
-    root.destroy()
+    global paddle,ball,game_running
+    canvas.delete("all")
     paddle=Paddle(canvas,'blue') #패들 먼저 생성하지 않으면 볼이 오류가 생김
     ball=Ball(canvas,paddle,'red')
     label.confing(text="")
+    game_running=True
 
-        
+def game_over():
+    global game_running
+    game_running=False
+    label.config(text="GAME OVER")
+    Button(root,text="재시작",command=restart).pack()
 
-
+while True:
+    if game_running:
+        if ball.hit_bottom==False: #게임 오버가 아닐때만 실행
+            ball.draw()
+            paddle.draw()
+        else:
+            game_over()
+    root.update_idletasks()
+    root.update()
+    time.sleep(0.01)
 
 root.mainloop()
 
