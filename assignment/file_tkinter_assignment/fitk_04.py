@@ -1,4 +1,6 @@
 from tkinter import *
+import os
+base_dir=os.path.dirname(__file__)
 
 #상속구조
 class Vehicle:
@@ -45,13 +47,15 @@ def clear_dog():
 
 #로그추가
 def append_log(message):
-    with open("assignment/file_tkinter_assignment/drive_log.txt","a") as a:
+    global filepath
+    filepath=os.path.join(base_dir,"drive_log.txt")
+    with open(filepath,"a") as a:
         a.write(message+"\n")
     label.config(text=message)
 
 #파일 지우기 - open으로 하면 후에 전역함수로 영향을 받아서 각 함수에서 지정하는 방식!
 def clear_log_file():
-    with open("assignment/file_tkinter_assignment/drive_log.txt","w") as a:
+    with open(filepath,"w") as a:
         pass
     
 
