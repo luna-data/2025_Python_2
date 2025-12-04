@@ -73,7 +73,7 @@ while running:
             score+=1
             coin_rect.x=430 if score%2==0 else 350
         
-        hits=pygame.sprite.spritecollide(player, enemy_group,Falses)
+        hits=pygame.sprite.spritecollide(player, enemy_group,False)
         if hits:
             print('적과 충돌! 게임 오버')
             game_over=True
@@ -81,11 +81,20 @@ while running:
   # 화면 그리기
         screen.fill((170,200,255))
         pygame.draw.rect(screen,(80,170,80),(0,HEIGHT-60,WIDTH,60))
-        pygame.draw.circle(screen,(0,255,0),(450,150),20)
+        pygame.draw.circle(screen,(0,255,0),(coin_rect.x+coin_rect.width//2,coin_rect.y+coin_rect.height//2),20)
         pygame.draw.line(screen,(0,0,0),(300,300),(500,500),5)
 
     all_sprites.draw(screen)
     
+    font=pygame.font.SysFont(None, 24)
+    text=font.render(f"Score:{score}",True,(0,0,0))
+    screen.blit(text,(10,10))
+
+    if game_over:
+        over_text=font.render("GAME OVER",True, (255,0,0))
+        over_x=(WIDTH-over_text.get_width())//2
+        over_y=(HEIGHT-over_text.get_height())//2
+        screen.blit(over_text, (over_x, over_y))
     pygame.display.flip()
     clock.tick(60)
 
