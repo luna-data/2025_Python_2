@@ -106,7 +106,7 @@ def restart():
     canvas.delete("all")
     paddle=Paddle(canvas,'blue') #패들 먼저 생성하지 않으면 볼이 오류가 생김
     ball1=Ball(canvas,paddle,'red')
-    ball2=Ball(canvas,paddle,'blue')
+    ball2=Ball(canvas,paddle,'blue') 
     label.config(text=" ")
     game_running=True
     bcount=0
@@ -127,7 +127,7 @@ while True:
         if ball1.hit_bottom==False and ball2.hit_bottom==False: #게임 오버가 아닐때만 실행
             ball1.draw()
             ball2.draw()
-
+            paddle.draw()
         
         else:
             game_over()
