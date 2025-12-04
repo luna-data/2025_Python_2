@@ -1,5 +1,5 @@
 #+본인의 아이디어 아무거나 추가 (주석달기)
-#점수 추가하기
+# 파란색 공을 추가하여 점수는 2배로 받고, 공이 하나라도 떨어지면 바로 게임 끝
 
 from tkinter import * #값들의 움직임을 알 수 있어야함 , 디벨롭 하는 방식으로 하기!
 import time 
@@ -122,13 +122,12 @@ def game_over():
     button=Button(root,text="재시작",command=restart)
     button.pack()
 
-while True:
+while True: #볼 하나가 바닥으로 떨어지면 바로 게임 끝
     if game_running:
         if ball1.hit_bottom==False and ball2.hit_bottom==False: #게임 오버가 아닐때만 실행
             ball1.draw()
             ball2.draw()
             paddle.draw()
-        
         else:
             game_over()
     root.update_idletasks()

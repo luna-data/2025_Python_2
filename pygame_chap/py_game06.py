@@ -1,4 +1,4 @@
-#5. 실시간 키 입력(get_pressed)
+
 import pygame
 import os
 base_dir=os.path.dirname(__file__)
