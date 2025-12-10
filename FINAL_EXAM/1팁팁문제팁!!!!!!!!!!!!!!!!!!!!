@@ -1,0 +1,378 @@
+문제 유형 1 — 새로운 객체 클래스 설계하기 (상속 or Sprite 활용)
+
+“Apple 클래스를 참고하여 새로운 FallingObject 클래스를 설계하시오.”
+또는
+“Poop과 Apple을 공통으로 관리할 수 있는 부모 클래스를 만드시오.”
+
+출제 포인트:
+
+pygame.sprite.Sprite 상속
+
+공통 기능 → 부모 클래스
+
+개별 기능 → 자식 클래스 오버라이딩
+
+예시 문제:
+
+Apple, Poop 두 클래스에서 공통으로 사용하는 속성(x, y, speed, reset_position)을
+FallingObject(부모)로 분리하고,
+Apple과 Poop이 이 클래스를 상속받도록 수정하시오.
+
+📌 문제 유형 2 — 충돌 처리 관련 기능 추가
+
+“똥과 충돌하면 점수가 1 감소하도록 코드를 수정하시오.”
+(실제로 너가 한 기능)
+
+출제 포인트:
+
+spritecollide() 이해
+
+반복문에서 충돌 객체 속성 처리
+
+리셋 로직 제어
+
+📌 문제 유형 3 — 난이도 조절 기능 구현
+
+“10초마다 사과 속도를 1씩 증가시키는 코드를 작성하시오.”
+
+시험에서 엄청 좋아하는 유형이야.
+
+출제 포인트:
+
+pygame.time.get_ticks()
+
+수식 변환 (integer 보정)
+
+객체 전체 속성 변경
+
+📌 문제 유형 4 — 파일 I/O 연동하기
+
+“게임 종료 시 점수를 highscore.txt에 저장하고, 다음 실행 때 읽어오도록 하시오.”
+
+출제 포인트:
+
+예외 처리 (FileNotFoundError)
+
+파일 읽기/쓰기
+
+문자열 → int 변환
+
+📌 문제 유형 5 — 객체 여러 개 관리하는 코드 작성
+
+“사과를 5개 생성하여 sprite.Group에 추가하는 코드를 작성하시오.”
+
+출제 포인트:
+
+for문 이용
+
+그룹 관리
+
+Sprite의 생명주기
+
+📌 문제 유형 6 — 다형성 문제(객체를 공통으로 처리하는 코드)
+
+예시:
+
+for obj in falling_objects:
+    obj.update()
+
+
+Apple과 Poop이 서로 다른 클래스인데, 왜 같은 리스트나 그룹 안에서
+같은 메서드(update)를 호출할 수 있는가?
+
+정답 포인트:
+
+다형성(polymorphism) → 같은 메서드 이름을 갖고 있어서 가능
+
+같은 부모를 상속했기 때문 (Sprite or 사용자 정의 부모 클래스)
+
+
+_________________---
+아 이거 완전 좋은 포인트 짚었다 👍
+시험지에 **“is-a / has-a 관계로 풀이하시오”**라고 써 있으면,
+단순히 말로만 구분하는 게 아니라 **코드 구조 자체가 달라져야** 해서 헷갈릴 수 있어.
+
+그래서 **“말로 설명할 때 차이” + “코드로 짤 때 차이”**를
+지금 네 Pygame 코드(Apple, Poop, Player)를 예로 들면서 정리해볼게.
+
+---
+
+## 1. 개념 요약부터 딱 잡고 가자
+
+### 🔵 is-a 관계 (상속, inheritance)
+
+> A is a B
+> A는 B이다 → **클래스를 상속받아서 표현**
+
+* 예:
+
+  * Apple **is a** Sprite
+  * Dog **is an** Animal
+  * ElectricCar **is a** Car
+
+**파이썬 코드 모양:**
+
+```python
+class Apple(pygame.sprite.Sprite):
+    ...
+```
+
+여기서 `Apple`은 `Sprite`를 **상속**하기 때문에
+
+> “Apple is a Sprite” (is-a 관계) 라고 말할 수 있어.
+
+---
+
+### 🟢 has-a 관계 (구성, composition)
+
+> A has a B
+> A는 B를 가진다 → **필드(멤버 변수)로 다른 객체를 들고 있음**
+
+* 예:
+
+  * Person **has a** Pet
+  * Game **has a** Player
+  * Apple **has a** rect
+
+**파이썬 코드 모양:**
+
+```python
+class Apple(pygame.sprite.Sprite):
+    def __init__(self, speed=3):
+        super().__init__()
+        self.image = ...
+        self.rect = self.image.get_rect()  # Apple has a rect
+```
+
+→ `Apple` 안에 `rect`라는 **다른 객체**를 멤버 변수로 가지고 있음 → has-a 관계.
+
+---
+
+## 2. 시험에서 “has-a로 쓰시오 / is-a로 쓰시오”가 의미하는 것
+
+### ✅ 1) “is-a 관계로 설계하시오”라고 나오면
+
+**반드시 `class A(B):` 형태의 “상속”을 써야 해.**
+
+예를 들어 문제에 이렇게 나오면:
+
+> “FallingObject라는 부모 클래스를 만들고,
+> Apple과 Poop이 이를 is-a 관계로 사용하도록 클래스를 설계하시오.”
+
+이 말은 곧:
+
+```python
+class FallingObject(pygame.sprite.Sprite):
+    def __init__(...):
+        ...
+
+class Apple(FallingObject):   # Apple is a FallingObject
+    ...
+
+class Poop(FallingObject):    # Poop is a FallingObject
+    ...
+```
+
+이렇게 **상속 구조**가 나와야 정답이야.
+
+---
+
+### ✅ 2) “has-a 관계로 설계하시오”라고 나오면
+
+**상속 대신 “멤버 변수로 포함”해서 풀어야 해.**
+
+예를 들어 문제에:
+
+> “Game 클래스는 Player와 여러 FallingObject를 has-a 관계로 가지도록 설계하시오.”
+
+이러면:
+
+```python
+class Game:
+    def __init__(self):
+        self.player = Player()          # Game has a Player
+        self.falling_objects = []       # Game has a list of FallingObject
+```
+
+이게 정답 스타일이고,
+`class Game(Player):` 이렇게 상속 쓰면 **완전 오답**이야.
+(“Game is a Player”는 말이 안 되니까)
+
+---
+
+## 3. 지금 네 게임 코드에 적용해서 구분해볼까?
+
+### 🎮 현재 코드에서 is-a 관계
+
+```python
+class Player(pygame.sprite.Sprite):
+    ...
+class Apple(pygame.sprite.Sprite):
+    ...
+class Poop(pygame.sprite.Sprite):
+    ...
+```
+
+* Player **is a** Sprite
+* Apple **is a** Sprite
+* Poop **is a** Sprite
+
+→ 이건 “**Sprite 기능(그룹, collision 등)을 물려받아서 쓰겠다**”는 상속 구조야.
+
+**시험에서 is-a 관계를 설명하라고 하면:**
+
+> “Apple 클래스는 pygame.sprite.Sprite를 상속받으므로,
+> Apple is a Sprite 관계를 가진다.
+> 따라서 스프라이트 그룹에 넣어서 공통 인터페이스(update, draw 등)를
+> 다형적으로 사용할 수 있다.”
+
+이렇게 쓰면 깔끔해.
+
+---
+
+### 🎮 현재 코드에서 has-a 관계
+
+1. **Apple has a rect / image**
+
+```python
+self.image = pygame.image.load(self.img_path).convert_alpha()
+self.rect = self.image.get_rect()
+```
+
+→ Apple 안에 `image`, `rect` 객체를 **멤버 변수로 저장**
+→ “Apple has a rect”, “Apple has an image” (has-a)
+
+2. **게임(메인 코드) has a Player, has Apples, has Poops**
+
+```python
+all_sprites = pygame.sprite.Group()
+apple_group = pygame.sprite.Group()
+poop_group = pygame.sprite.Group()
+
+player = Player()
+all_sprites.add(player)
+```
+
+이건 “Game(메인 루프)이 Player, Apple, Poop 스프라이트들을 관리한다”는 구조라서:
+
+* Game **has a** Player
+* Game **has** 여러 Apple, Poop
+
+라고 볼 수 있어.
+
+---
+
+## 4. 비슷해 보이는데 헷갈리는 케이스 정리
+
+### ❓ 케이스 1. “부모-자식처럼 보이는데 has-a로 해도 되나?”
+
+예: Player와 Apple
+
+* Player is a Apple ? → ❌ (이상함)
+* Apple is a Player ? → ❌ (이상함)
+
+둘은 “종류” 관계가 아니라 **역할이 다름**
+→ 이런 건 **상속(is-a)**가 아니라 Game이 둘을 **has-a** 하는 구조로 두는 게 맞아.
+
+```python
+class Game:
+    def __init__(self):
+        self.player = Player()
+        self.apples = [Apple() for _ in range(5)]
+```
+
+그래서 시험에서
+
+> “Player와 Apple 관계를 has-a / is-a 중 하나로 설명하시오”
+> 라고 나오면:
+
+* Player is-a Apple → ❌
+* Apple is-a Player → ❌
+* Game has-a Player / Game has Apples → ✅ 이렇게 적어야 해.
+
+---
+
+### ❓ 케이스 2. “부모를 따로 만들 수도 있고, 안 만들 수도 있을 때”
+
+예: FallingObject
+
+**is-a 버전 (상속 사용)**
+
+```python
+class FallingObject(pygame.sprite.Sprite):
+    def __init__(self, img_name, speed=3):
+        super().__init__()
+        self.img_path = os.path.join(base_dir, img_name)
+        self.image = pygame.image.load(self.img_path).convert_alpha()
+        self.image = pygame.transform.scale(self.image, (40, 40))
+        self.rect = self.image.get_rect()
+        self.speed = speed
+        self.reset_position()
+
+    def reset_position(self):
+        self.rect.x = random.randint(0, WIDTH - self.rect.width)
+        self.rect.y = random.randint(-100, -40)
+
+    def update(self):
+        self.rect.y += self.speed
+        if self.rect.top > HEIGHT:
+            self.reset_position()
+
+class Apple(FallingObject):  # Apple is a FallingObject
+    pass
+
+class Poop(FallingObject):   # Poop is a FallingObject
+    pass
+```
+
+→ 여기서는 **“Apple is a FallingObject”**라고 답해야 하고,
+문제에서 “is-a 관계를 사용하시오”라고 했으면 이런 방향이 정답.
+
+---
+
+**has-a 버전 (구성 사용)**
+
+```python
+class FallingObjectWrapper:
+    def __init__(self, img_name, speed=3):
+        self.sprite = Apple(speed)  # 또는 Poop
+```
+
+혹은 Game이 모든 FallingObject를 리스트로만 가지고 있고,
+Apple, Poop은 따로 상속 안 쓰고 다 개별 클래스로만 쓰는 경우.
+
+문제에서 “has-a 관계로 풀어라”면 이렇게:
+
+* Game has-a Player
+* Game has-a list of Apple/Poop
+
+로 설계하고,
+**부모 FallingObject 상속 구조는 안 쓰는 쪽**으로 가야 해.
+
+---
+
+## 5. 시험 답안에 쓸 수 있게 한 줄 정리
+
+정리해서 말로 써야 할 때 이렇게 쓰면 좋아:
+
+1. **is-a 관계**
+
+   * “A is a B 형태의 ‘종류 관계’를 표현하며, 코드에서는 `class A(B)`처럼 **상속**으로 구현한다.”
+   * “예: `class Apple(pygame.sprite.Sprite):` → Apple is a Sprite”
+
+2. **has-a 관계**
+
+   * “A has a B 형태의 ‘포함 관계’를 표현하며, 코드에서는 A의 멤버 변수로 B 객체를 **포함(composition)**하는 방식으로 구현한다.”
+   * “예: `self.rect = self.image.get_rect()` → Apple has a rect”
+
+3. **시험에서 ‘has-a로 풀이하시오’라고 명시되면**
+
+   * 상속 대신 멤버 필드로 다른 객체를 들고 있어야 하고,
+   * `class A(B)` 같은 상속 구조를 쓰면 감점/오답 가능성 높음.
+
+4. **시험에서 ‘is-a로 설계하시오’라고 명시되면**
+
+   * 반드시 부모 클래스를 정의하고,
+   * `class 자식(부모):` 형태로 상속 구조를 만드는 게 정답.
+
+---
