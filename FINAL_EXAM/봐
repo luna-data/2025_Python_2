@@ -1,0 +1,243 @@
+아래는 **pygame 시험 대비 핵심 개념 전체를 하나의 흐름 있는 텍스트**로 정리한 통합본이야.
+완전한 **이해 중심 + 시험 출제 포맷**으로 정리했기 때문에 그대로 출력해서 공부해도 된다.
+
+---
+
+# 🎮 Pygame 기말고사 핵심 정리 (통합본)
+
+Pygame에서 게임을 만들 때 가장 중요한 것은 **객체(클래스)를 이용해 화면 위 요소들을 관리하고**, 이 객체들이 서로 **이동하고, 충돌하고, 이벤트를 일으키는 구조**를 이해하는 것이다. 다음 개념들은 기말에서 그대로 문제로 출제될 가능성이 높다.
+
+---
+
+## 1️⃣ 객체 이름을 다른 것으로 지정한다는 의미
+
+동일한 클래스로 여러 객체를 만들더라도, 각 객체를 구별하기 위해 **속성(name, color, speed)** 등을 부여하는 것을 의미한다.
+예를 들어 사과를 여러 개 생성할 때 각각의 이름을 주면 충돌 시 어떤 사과가 충돌했는지 알 수 있다.
+
+```python
+apple1 = Apple(name="빨간 사과")
+apple2 = Apple(name="큰 사과")
+```
+
+이는 **객체마다 고유한 행동 또는 이벤트 발생 시 구분하기 위해 필요**하다.
+
+---
+
+## 2️⃣ 사과가 위에서 아래로 떨어지는 게임 개념
+
+사과가 떨어지는 것처럼 보이려면 **y 좌표를 증가시키는 것**이 핵심이다.
+
+```python
+self.rect.y += self.speed
+```
+
+그리고 화면 아래로 벗어나면 다시 위로 보내야 한다.
+
+```python
+if self.rect.top > HEIGHT:
+    self.rect.y = random.randint(-200, -50)
+```
+
+이 패턴은 모든 “떨어지는 객체”에서 변형되어 출제된다:
+
+* 사과 떨어짐
+* 똥 떨어짐
+* 아이템 떨어짐 등
+
+---
+
+## 3️⃣ 똥 피하기 게임 개념
+
+사과와 동일한 구조지만, 충돌 시 행동이 다르다.
+
+* **사과 충돌 → 점수 증가**
+* **똥 충돌 → 목숨 감소**
+
+충돌 체크는 동일하게 한다.
+
+```python
+hits = pygame.sprite.spritecollide(player, poop_group, False)
+if hits:
+    life -= 1
+```
+
+이 구조는 시험에서 **사과/똥/폭탄/별** 등으로 변형될 수 있다.
+
+---
+
+## 4️⃣ 객체 충돌 시 무언가 일어나는 개념
+
+pygame에서 충돌은 rect(사각형)이 겹치는 것을 의미하며, 내장 함수로 처리한다.
+
+```python
+hits = pygame.sprite.spritecollide(player, apple_group, False)
+```
+
+충돌 이후에 어떤 변화가 일어나는지가 가장 중요한 부분이다.
+
+예시:
+
+```python
+score += 1
+life -= 1
+speed += 0.5
+apple.reset_position()
+```
+
+즉, **충돌 → 변수 변화 → 객체 상태 변화(reset, kill)**
+이 흐름을 구현하는 것이 핵심이다.
+
+---
+
+## 5️⃣ 레이저(총 쏘기) 기능 구현
+
+레이저 기능은 다음 요소로 구성된다.
+
+### ✔ 레이저는 플레이어 위치에서 생성됨
+
+### ✔ y축 위 방향(-)으로 이동
+
+### ✔ 화면 밖으로 나가면 삭제
+
+### ✔ 적과 충돌하면 적이 사라짐
+
+레이저 클래스 예:
+
+```python
+class Laser(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = pygame.Surface((5, 15))
+        self.image.fill((255, 255, 0))
+        self.rect = self.image.get_rect(center=(x, y))
+        self.speed = -7
+
+    def update(self):
+        self.rect.y += self.speed
+        if self.rect.bottom < 0:
+            self.kill()
+```
+
+Space로 발사:
+
+```python
+if event.key == pygame.K_SPACE:
+    laser = Laser(player.rect.centerx, player.rect.top)
+    laser_group.add(laser)
+    all_sprites.add(laser)
+```
+
+충돌:
+
+```python
+hit = pygame.sprite.groupcollide(laser_group, apple_group, True, True)
+if hit:
+    score += 1
+```
+
+---
+
+## 6️⃣ 여러 플레이어 또는 객체가 존재하려면?
+
+객체 여러 개를 리스트나 스프라이트 그룹에 담기만 하면 된다.
+
+```python
+players = pygame.sprite.Group()
+for i in range(3):
+    p = Player()
+    p.rect.x = i * 100
+    players.add(p)
+```
+
+또는 상속을 사용해 속도가 다른 플레이어 만들기:
+
+```python
+class FastPlayer(Player): speed = 8
+class SlowPlayer(Player): speed = 2
+```
+
+---
+
+## 7️⃣ 객체가 자유롭게 위/아래/좌/우 이동하는 방법
+
+pygame에서는 **키 상태를 지속적으로 체크하는 방식**을 쓴다.
+
+```python
+keys = pygame.key.get_pressed()
+if keys[K_LEFT]: self.rect.x -= speed
+if keys[K_RIGHT]: self.rect.x += speed
+if keys[K_UP]: self.rect.y -= speed
+if keys[K_DOWN]: self.rect.y += speed
+```
+
+이 구조를 정확히 이해하면 어떤 캐릭터든 쉽게 컨트롤할 수 있다.
+
+---
+
+## 8️⃣ 사운드 추가(액션 처리)
+
+1. 사운드 초기화
+
+```python
+pygame.mixer.init()
+```
+
+2. 사운드 로드
+
+```python
+shoot_sound = pygame.mixer.Sound("laser.wav")
+```
+
+3. 실행
+
+```python
+shoot_sound.play()
+```
+
+게임에서 충돌·발사·점프 등의 이벤트에 음향을 넣는 것이 시험에 출제될 수 있다.
+
+---
+
+## 9️⃣ 충돌 시 변수 변경 연습 패턴
+
+시험에서 가장 많이 나오는 구조.
+
+```python
+hits = pygame.sprite.spritecollide(player, apple_group, False)
+
+if hits:
+    score += 1
+    life -= 1
+    speed += 0.2
+    apple.reset_position()
+```
+
+즉:
+
+### **충돌 → 변수 변화 → 상태 변화**
+
+이 패턴만 이해하면 다양한 문제를 해결할 수 있다.
+
+---
+
+# ⭐ 최종 요약 (기말 대비 핵심 9개)
+
+1. 객체 이름 부여 = 객체 식별을 위한 name 속성
+2. 떨어지는 객체 = rect.y 증가
+3. 똥 피하기 = 충돌 시 life 감소
+4. 충돌 처리 = spritecollide
+5. 총 쏘기 = 레이저 클래스 + 위 방향 이동
+6. 여러 객체 = 그룹으로 관리
+7. 자유 이동 = key.get_pressed()
+8. 사운드 = mixer.Sound
+9. 충돌 후 변수 변화 = score, life, speed 변경
+
+---
+
+필요하면 다음도 만들어줄게 ❤️
+
+✔ 위 개념을 전부 섞은 **기말 예상문제 10개**
+✔ “총 쏘기 + 똥 피하기 + 사운드 + 난이도 조절” 통합 게임 코드
+✔ 상속/다형성도 들어간 pygame 구조 문제
+
+말해주면 바로 제작해줄게!
