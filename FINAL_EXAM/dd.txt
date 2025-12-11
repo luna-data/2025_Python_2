@@ -1,0 +1,38 @@
+from tkinter import *
+
+class Student:
+    def __init__(self, name, sid):
+        self.name = name
+        self.sid = sid
+    
+    def info(self):
+        return f"이름: {self.name}, 학번: {self.sid}"
+
+def create_student():
+    name = e_name.get().strip()
+    sid = e_sid.get().strip()
+
+    if name == "" or sid == "":
+        result_label.config(text="이름과 학번을 입력하세요.")
+        return
+    
+    s = Student(name, sid)
+    result_label.config(text=s.info())
+
+root = Tk()
+root.title("학생 정보 출력")
+
+Label(root, text="이름:").pack()
+e_name = Entry(root)
+e_name.pack()
+
+Label(root, text="학번:").pack()
+e_sid = Entry(root)
+e_sid.pack()
+
+Button(root, text="정보 출력", command=create_student).pack(pady=10)
+
+result_label = Label(root, text="(학생 정보가 여기에 표시됩니다)")
+result_label.pack()
+
+root.mainloop()
