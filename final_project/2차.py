@@ -1,521 +1,379 @@
 import pygame
-import sys
 import random
+import os
 
-# ============================================
-# 기본 설정
-# ============================================
-WIDTH, HEIGHT = 800, 600
-FPS = 60
+base_dir = os.path.dirname(__file__)
+pygame.init()
 
-# 색상
+WIDTH, HEIGHT = 600, 400
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("커피알바 게임")
+
+clock = pygame.time.Clock()
+
+class Player(pygame.sprite.Sprite):
+  def __init__(self):
+    super().__init__()
+    self.img_path=os.path.join(base_dir,"bini.png")
+    self.image=pygame.image.load(self.img_path)
+    self.image=pygame.transform.scale(self.image,(40,40))
+    self.rect=self.image.get_rect()
+    self.rect.center=(WIDTH//2,HEIGHT//2)
+    self.speed=3
+
+  def update(self): 
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT]:
+      self.rect.x -= self.speed
+    if keys[pygame.K_RIGHT]:
+      self.rect.x += self.speed
+    if keys[pygame.K_UP]:
+      self.rect.y -= self.speed
+    if keys[pygame.K_DOWN]:
+      self.rect.y += self.speed
+
+    self.rect.clamp_ip(screen.get_rect())
+
+
+# ------------------ 색 ------------------
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-BROWN = (139, 69, 19)
-LIGHT_BROWN = (205, 133, 63)
-DARK_GRAY = (60, 60, 60)
 FLOOR = (240, 230, 220)
+BROWN = (139, 69, 19)
+DARK_GRAY = (60, 60, 60)
 
-MENU_ITEMS = ["Americano", "Latte", "Mocha"]
+# ✅ 메뉴 이름/종류 변경
+MENU_ITEMS = ["Americano", "IcedTea", "Ade", "ChocoLatte"]
+MENU_LETTER = {"Americano": "A", "IcedTea": "T", "Ade": "D", "ChocoLatte": "C"}
 
+# ------------------ 이미지 로드(없으면 대체) ------------------
+def load_image(path, size):
+    try:
+        img = pygame.image.load(path).convert_alpha()
+        img = pygame.transform.scale(img, size)
+        return img
+    except:
+        return None
 
-# ============================================
-# 손님 클래스 (움직임 + 상태 + 말풍선)
-# ============================================
-class Customer:
-    def __init__(self, seat_x, seat_y, order, max_wait=10.0, from_side="left"):
-        # 최종 자리
-        self.seat_x = seat_x
-        self.seat_y = seat_y
+player_img = load_image(os.path.join(base_dir, "bini.png"), (40, 40))
+customer_img = load_image(os.path.join(base_dir, "customer.png"), (50, 50))  # 없으면 대체됨
+cup_img = load_image(os.path.join(base_dir, "cup.png"), (28, 36))            # 없으면 대체됨
+
+font = pygame.font.SysFont("malgungothic", 18)
+font_big = pygame.font.SysFont("malgungothic", 30)
+
+# ------------------ 카페 머신 위치 ------------------
+MACHINE_RECT = pygame.Rect(WIDTH//2 - 45, HEIGHT//2 - 20, 90, 40)
+
+# ------------------ Player ------------------
+class Player(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        if player_img:
+            self.image = player_img
+        else:
+            self.image = pygame.Surface((40, 40), pygame.SRCALPHA)
+            pygame.draw.rect(self.image, (80, 120, 200), (0, 0, 40, 40), border_radius=8)
+
+        self.rect = self.image.get_rect(center=(WIDTH//2, HEIGHT//2 + 120))
+        self.speed = 4
+        self.held_coffee = None  # "Americano" 등 or None
+
+    def update(self):
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+            self.rect.x -= self.speed
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+            self.rect.x += self.speed
+        if keys[pygame.K_UP] or keys[pygame.K_w]:
+            self.rect.y -= self.speed
+        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
+            self.rect.y += self.speed
+
+        self.rect.clamp_ip(screen.get_rect())
+
+# ------------------ Customer ------------------
+class Customer(pygame.sprite.Sprite):
+    def __init__(self, seat_pos, order):
+        super().__init__()
+        if customer_img:
+            self.image = customer_img
+        else:
+            self.image = pygame.Surface((50, 50), pygame.SRCALPHA)
+            pygame.draw.circle(self.image, (205, 133, 63), (25, 25), 25)
+            pygame.draw.circle(self.image, (80, 80, 80), (25, 25), 25, 2)
+
+        self.rect = self.image.get_rect(center=seat_pos)
         self.order = order
 
-        # 입장 방향에 따른 초기 위치
-        self.speed = 120  # 이동 속도
-        if from_side == "left":
-            self.x = -60
-        else:
-            self.x = WIDTH + 60
-        self.y = seat_y
-
-        # 상태: entering → waiting → leaving
-        self.state = "entering"
-
-        # 대기 관련
-        self.max_wait = max_wait
-        self.wait_time = 0.0
-        self.timed_out = False
+        self.state = "waiting"  # waiting / leaving
+        self.wait_frames = 0
+        self.max_wait_frames = random.randint(60*6, 60*10)  # 6~10초(@60fps)
+        self.left_happy = False
         self.timeout_penalized = False
 
-        # 행복하게 나갔는지 여부
-        self.left_happy = False
-
-    def update(self, dt):
-        if self.state == "entering":
-            # 좌석까지 걸어오기
-            if abs(self.x - self.seat_x) > 2:
-                direction = 1 if self.seat_x > self.x else -1
-                self.x += direction * self.speed * dt
-            else:
-                self.x = self.seat_x
-                self.state = "waiting"
-                self.wait_time = 0.0
-
-        elif self.state == "waiting":
-            # 자리에서 기다리는 중
-            self.wait_time += dt
-            if self.wait_time >= self.max_wait:
-                self.state = "leaving"
-                self.timed_out = True
-
-        elif self.state == "leaving":
-            # 오른쪽으로 퇴장
-            self.x += self.speed * dt
-
-    def get_rect(self):
-        size = 70
-        return pygame.Rect(self.x - size // 2, self.y - size // 2, size, size)
-
-    def draw(self, screen, font_small):
-        # 기다리는 동안 테두리 색 변화
+    def update(self):
         if self.state == "waiting":
-            ratio = min(self.wait_time / self.max_wait, 1.0)
-            border_color = (
-                int(50 + 170 * ratio),     # R
-                int(200 - 150 * ratio),    # G
-                int(80 * (1 - ratio)),     # B
-            )
-        else:
-            border_color = (80, 80, 80)
+            self.wait_frames += 1
+            if self.wait_frames >= self.max_wait_frames:
+                self.state = "leaving"  # 타임아웃 -> 떠남
 
-        # 얼굴
-        pygame.draw.circle(screen, LIGHT_BROWN, (int(self.x), int(self.y)), 35)
-        pygame.draw.circle(screen, border_color, (int(self.x), int(self.y)), 35, 3)
-
-        # 말풍선 텍스트
-        if self.state == "entering":
-            text_str = "..."
-        elif self.state == "waiting":
-            text_str = self.order
         elif self.state == "leaving":
+            self.rect.x += 3
+
+    def draw_bubble(self, surf):
+        if self.state == "waiting":
+            text_str = self.order
+        else:
             text_str = "Thanks!" if self.left_happy else "ㅠㅠ"
 
-        text = font_small.render(text_str, True, BLACK)
-        text_rect = text.get_rect(center=(int(self.x), int(self.y - 55)))
+        txt = font.render(text_str, True, BLACK)
+        bubble = pygame.Rect(0, 0, txt.get_width()+10, txt.get_height()+6)
+        bubble.midbottom = (self.rect.centerx, self.rect.top - 5)
 
-        bubble_rect = pygame.Rect(
-            text_rect.x - 4,
-            text_rect.y - 2,
-            text_rect.width + 8,
-            text_rect.height + 4,
-        )
+        pygame.draw.rect(surf, WHITE, bubble, border_radius=6)
+        pygame.draw.rect(surf, BLACK, bubble, 1, border_radius=6)
+        surf.blit(txt, (bubble.x+5, bubble.y+3))
 
-        pygame.draw.rect(screen, WHITE, bubble_rect, border_radius=6)
-        pygame.draw.rect(screen, BLACK, bubble_rect, 1, border_radius=6)
-        screen.blit(text, text_rect)
-
-
-# ============================================
-# 플레이어(캐릭터) 클래스
-# ============================================
-class Player:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-        self.width = 40
-        self.height = 60
-        self.speed = 250  # 픽셀/초
-
-        # 들고 있는 커피 (문자열 or None)
-        self.held_coffee = None
-
-    @property
-    def rect(self):
-        return pygame.Rect(
-            int(self.x - self.width // 2),
-            int(self.y - self.height),
-            self.width,
-            self.height
-        )
-
-    def update(self, dt, keys):
-        dx = dy = 0
-        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            dx -= 1
-        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            dx += 1
-        if keys[pygame.K_UP] or keys[pygame.K_w]:
-            dy -= 1
-        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
-            dy += 1
-
-        # 대각선 보정
-        if dx != 0 and dy != 0:
-            dx *= 0.7071
-            dy *= 0.7071
-
-        self.x += dx * self.speed * dt
-        self.y += dy * self.speed * dt
-
-        # 화면 안으로만 이동
-        min_y = HEIGHT // 2 + 40
-        max_y = HEIGHT - 20
-        self.x = max(self.width // 2, min(WIDTH - self.width // 2, self.x))
-        self.y = max(min_y, min(max_y, self.y))
-
-    def is_near(self, customer, max_dist=120):
-        dx = self.x - customer.x
-        dy = (self.y - self.height // 2) - customer.y
-        return dx * dx + dy * dy <= max_dist * max_dist
-
-    def draw(self, screen):
-        # 몸통
-        pygame.draw.rect(screen, (80, 120, 200), self.rect, border_radius=8)
-        # 머리
-        head_center = (self.rect.centerx, self.rect.top - 15)
-        pygame.draw.circle(screen, (255, 224, 189), head_center, 15)
-
-
-# ============================================
-# 커피 컵 클래스 (머신에서 생성되는 컵)
-# ============================================
-class CoffeeCup:
+# ------------------ CoffeeCup ------------------
+class CoffeeCup(pygame.sprite.Sprite):
     def __init__(self, x, y, coffee_type):
-        self.x = x
-        self.y = y
-        self.width = 30
-        self.height = 40
-        self.coffee_type = coffee_type  # "Americano", "Latte", ...
+        super().__init__()
+        self.coffee_type = coffee_type
 
-    @property
-    def rect(self):
-        return pygame.Rect(
-            int(self.x - self.width // 2),
-            int(self.y - self.height),
-            self.width,
-            self.height
-        )
+        if cup_img:
+            self.image = cup_img
+        else:
+            self.image = pygame.Surface((28, 36), pygame.SRCALPHA)
+            pygame.draw.rect(self.image, (230, 230, 230), (0, 0, 28, 36), border_radius=6)
+            pygame.draw.rect(self.image, BLACK, (0, 0, 28, 36), 2, border_radius=6)
 
-    def draw(self, screen, font_small):
-        # 컵 몸체
-        pygame.draw.rect(screen, (230, 230, 230), self.rect, border_radius=6)
-        pygame.draw.rect(screen, BLACK, self.rect, 2, border_radius=6)
+        self.rect = self.image.get_rect(midbottom=(x, y))
 
-        # 컵에 표시되는 글자 (커피 종류 첫 글자)
-        label = self.coffee_type[0]  # 'A', 'L', 'M' 같은 느낌
-        text = font_small.render(label, True, BLACK)
-        text_rect = text.get_rect(center=self.rect.center)
-        screen.blit(text, text_rect)
+    def draw_label(self, surf):
+        letter = MENU_LETTER.get(self.coffee_type, "?")
+        txt = font.render(letter, True, BLACK)
+        surf.blit(txt, txt.get_rect(center=self.rect.center))
 
+# ------------------ 스폰 함수 ------------------
+SEATS = [(WIDTH//4, HEIGHT//2 + 10), (WIDTH//2, HEIGHT//2 + 10), (3*WIDTH//4, HEIGHT//2 + 10)]
 
-# ============================================
-# 게임 메인 클래스
-# ============================================
-class Game:
-    def __init__(self):
-        pygame.init()
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
-        pygame.display.set_caption("Mini I Love Coffee - Background & Coffee Machine")
-        self.clock = pygame.time.Clock()
+def spawn_customer(customer_group, all_sprites):
+    used = {c.rect.center for c in customer_group if c.state != "leaving"}
+    available = [pos for pos in SEATS if pos not in used]
+    if not available:
+        return
 
-        # 폰트
-        self.font_large = pygame.font.SysFont("malgungothic", 40)
-        self.font_medium = pygame.font.SysFont("malgungothic", 24)
-        self.font_small = pygame.font.SysFont("malgungothic", 18)
+    seat = random.choice(available)
+    order = random.choice(MENU_ITEMS)
+    c = Customer(seat, order)
+    customer_group.add(c)
+    all_sprites.add(c)
 
-        # 배경 이미지 로드
-        try:
-            self.background = pygame.image.load("background.png")
-            self.background = pygame.transform.scale(self.background, (WIDTH, HEIGHT))
-        except Exception as e:
-            # 이미지가 없어도 에러 안 나게, 그냥 색으로 대체
-            print("배경 이미지를 불러오지 못했습니다. (background.png가 필요해요)", e)
-            self.background = None
+def spawn_cup(cup_group, all_sprites):
+    if len(cup_group) >= 5:
+        return
+    base_x = MACHINE_RECT.centerx - 70
+    gap = 35
+    x = base_x + len(cup_group) * gap
+    y = MACHINE_RECT.bottom + 35
 
-        # 게임 상태
-        self.running = True
-        self.game_over = False
+    coffee_type = random.choice(MENU_ITEMS)
+    cup = CoffeeCup(x, y, coffee_type)
+    cup_group.add(cup)
+    all_sprites.add(cup)
 
-        # 손님 관련
-        self.customers = []
-        self.max_customers = 3
-        self.spawn_interval = 3.0
-        self.spawn_timer = 0.0
+# ------------------ 게임 변수 ------------------
+all_sprites = pygame.sprite.Group()
+customer_group = pygame.sprite.Group()
+cup_group = pygame.sprite.Group()
 
-        # 점수/평판/시간
-        self.money = 0
-        self.reputation = 5
-        self.game_time = 0.0
-        self.time_limit = 60.0
+player = Player()
+all_sprites.add(player)
 
-        # 플레이어
-        self.player = Player(WIDTH // 2, HEIGHT // 2 + 120)
+money = 0
 
-        # 커피 머신 & 컵 관련
-        self.coffee_cups = []
-        self.coffee_spawn_interval = 4.0   # 커피 나오는 주기(초)
-        self.coffee_spawn_timer = 0.0
-        self.max_cups = 5
+# ✅ reputation(평판) -> lives(목숨)로 기능 변경
+lives = 5
 
-        # 머신 위치
-        self.machine_x = WIDTH // 2
-        self.machine_y = HEIGHT // 2 + 60
+score = 0
 
-    # ---------------- 손님 / 커피 관련 로직 ----------------
+game_over = False
+running = True
 
-    def spawn_customer(self):
-        seat_positions = [
-            (WIDTH // 4, HEIGHT // 2),
-            (WIDTH // 2, HEIGHT // 2),
-            (3 * WIDTH // 4, HEIGHT // 2),
-        ]
-        used = {(c.seat_x, c.seat_y) for c in self.customers if c.state != "leaving"}
-        available = [pos for pos in seat_positions if pos not in used]
-        if not available:
-            return
+# ✅ 전체 시간 제한 추가
+TOTAL_TIME_SEC = 90
+time_left_frames = TOTAL_TIME_SEC * 60  # 60fps 기준
 
-        seat_x, seat_y = random.choice(available)
-        order = random.choice(MENU_ITEMS)
-        max_wait = random.uniform(8.0, 15.0)
-        from_side = random.choice(["left", "right"])
-        self.customers.append(Customer(seat_x, seat_y, order, max_wait, from_side))
+# 프레임 타이머 (네 코드 스타일)
+customer_spawn_timer = 0
+CUSTOMER_SPAWN_INTERVAL = 180  # 3초
+cup_spawn_timer = 0
+CUP_SPAWN_INTERVAL = 240       # 4초
 
-    def spawn_coffee_cup(self):
-        # 5잔 이상이면 더 이상 만들지 않음
-        if len(self.coffee_cups) >= self.max_cups:
-            return
+# ------------------ 상호작용 ------------------
+def pick_cup():
+    if player.held_coffee is not None:
+        return
 
-        # 머신 앞에 좌→우로 줄 세우기
-        base_x = self.machine_x - 90
-        gap = 45
-        x = base_x + len(self.coffee_cups) * gap
-        y = self.machine_y + 40
+    hits = pygame.sprite.spritecollide(player, cup_group, dokill=True)
+    if hits:
+        player.held_coffee = hits[0].coffee_type
 
-        coffee_type = random.choice(MENU_ITEMS)
-        cup = CoffeeCup(x, y, coffee_type)
-        self.coffee_cups.append(cup)
+def serve():
+    global money, lives, score
 
-    def player_pick_coffee(self):
-        # 플레이어가 이미 들고 있으면 픽업 불가
-        if self.player.held_coffee is not None:
-            return
+    # ✅ 커피 없으면 목숨 -1
+    if player.held_coffee is None:
+        lives -= 1
+        return
 
-        for cup in list(self.coffee_cups):
-            if self.player.rect.colliderect(cup.rect):
-                self.player.held_coffee = cup.coffee_type
-                self.coffee_cups.remove(cup)
-                break
+    served = False
+    near_zone = player.rect.inflate(120, 120)
 
-    def serve_customer(self):
-        # 들고 있는 커피가 없으면 실패
-        if self.player.held_coffee is None:
-            self.reputation -= 1
-            return
-
-        # 플레이어 근처의 waiting 손님
-        near_customers = [
-            c for c in self.customers
-            if c.state == "waiting" and self.player.is_near(c)
-        ]
-
-        if not near_customers:
-            # 근처 손님 없음 → 서빙 실패
-            self.reputation -= 1
-            self.player.held_coffee = None
-            return
-
-        served = False
-
-        for customer in near_customers:
-            if customer.order == self.player.held_coffee:
-                # 성공적으로 서빙
-                wait_ratio = min(customer.wait_time / customer.max_wait, 1.0)
-                tip = max(10, int(50 * (1.0 - wait_ratio)))
-                self.money += tip
-
-                if wait_ratio < 0.7:
-                    self.reputation += 1
-                else:
-                    self.reputation -= 1
-
-                customer.state = "leaving"
-                customer.left_happy = True
-                customer.timed_out = False
+    for c in list(customer_group):
+        if c.state != "waiting":
+            continue
+        if near_zone.colliderect(c.rect):
+            # ✅ 주문 맞으면 성공
+            if c.order == player.held_coffee:
+                score += 1
+                money += 50
+                c.state = "leaving"
+                c.left_happy = True
                 served = True
                 break
 
-        if not served:
-            # 메뉴가 안 맞음 → 평판 감소
-            self.reputation -= 1
+    # ✅ 근처 손님 없거나 주문 틀리면 목숨 -1
+    if not served:
+        lives -= 1
 
-        # 커피는 어쨌든 손에서 사라짐
-        self.player.held_coffee = None
+    player.held_coffee = None
 
-    # ---------------- 업데이트 & 그리기 ----------------
-
-    def update(self, dt):
-        if self.game_over:
-            return
-
-        self.game_time += dt
-        if self.game_time >= self.time_limit or self.reputation <= 0:
-            self.game_over = True
-            return
-
-        keys = pygame.key.get_pressed()
-        self.player.update(dt, keys)
-
-        # 손님 생성 타이머
-        self.spawn_timer += dt
-        if self.spawn_timer >= self.spawn_interval and len(self.customers) < self.max_customers:
-            self.spawn_timer = 0.0
-            self.spawn_customer()
-
-        # 커피 생성 타이머
-        self.coffee_spawn_timer += dt
-        if self.coffee_spawn_timer >= self.coffee_spawn_interval:
-            self.coffee_spawn_timer = 0.0
-            self.spawn_coffee_cup()
-
-        # 손님 업데이트
-        for customer in list(self.customers):
-            prev_state = customer.state
-            customer.update(dt)
-
-            # 타임아웃으로 떠나기 시작할 때 평판 감소 (한 번만)
-            if customer.timed_out and not customer.timeout_penalized:
-                if prev_state == "waiting" and customer.state == "leaving":
-                    self.reputation -= 1
-                    customer.timeout_penalized = True
-
-            # 화면 밖으로 나가면 제거
-            if customer.state == "leaving" and (customer.x > WIDTH + 100 or customer.x < -100):
-                self.customers.remove(customer)
-
-    def draw_background(self):
-        # 배경 이미지 사용
-        if self.background:
-            self.screen.blit(self.background, (0, 0))
-        else:
-            # 이미지가 없으면 기본 배경
-            self.screen.fill(FLOOR)
-
-        # 카운터 (앞쪽 테이블)
-        pygame.draw.rect(self.screen, BROWN, (0, HEIGHT // 2 + 60, WIDTH, 40))
-
-        # 커피 머신
-        machine_rect = pygame.Rect(self.machine_x - 40, self.machine_y - 60, 80, 60)
-        pygame.draw.rect(self.screen, DARK_GRAY, machine_rect, border_radius=8)
-        pygame.draw.rect(self.screen, BLACK, machine_rect, 2, border_radius=8)
-
-        text = self.font_small.render("MACHINE", True, WHITE)
-        text_rect = text.get_rect(center=machine_rect.center)
-        self.screen.blit(text, text_rect)
-
-    def draw_ui_bar(self):
-        pygame.draw.rect(self.screen, DARK_GRAY, (0, 0, WIDTH, 70))
-
-        money_text = self.font_medium.render(f"돈: {self.money}원", True, WHITE)
-        rep_text = self.font_medium.render(f"평판: {self.reputation}", True, WHITE)
-        remaining = max(0, int(self.time_limit - self.game_time))
-        time_text = self.font_medium.render(f"남은 시간: {remaining}초", True, WHITE)
-
-        self.screen.blit(money_text, (20, 20))
-        self.screen.blit(rep_text, (250, 20))
-        self.screen.blit(time_text, (450, 20))
-
-        held = self.player.held_coffee if self.player.held_coffee else "없음"
-        held_text = self.font_medium.render(f"들고 있는 커피: {held}", True, WHITE)
-        self.screen.blit(held_text, (620 - held_text.get_width() // 2, 20))
-
-    def draw(self):
-        self.draw_background()
-
-        # 커피 컵
-        for cup in self.coffee_cups:
-            cup.draw(self.screen, self.font_small)
-
-        # 손님
-        for customer in self.customers:
-            customer.draw(self.screen, self.font_small)
-
-        # 플레이어
-        self.player.draw(self.screen)
-
-        # UI
-        self.draw_ui_bar()
-
-        # 게임 오버
-        if self.game_over:
-            overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-            overlay.fill((0, 0, 0, 150))
-            self.screen.blit(overlay, (0, 0))
-
-            msg = "게임 종료!"
-            msg2 = f"최종 돈: {self.money}원, 평판: {self.reputation}"
-            msg3 = "ESC: 종료, R: 다시 시작"
-
-            t1 = self.font_large.render(msg, True, WHITE)
-            t2 = self.font_medium.render(msg2, True, WHITE)
-            t3 = self.font_medium.render(msg3, True, WHITE)
-
-            self.screen.blit(t1, t1.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 40)))
-            self.screen.blit(t2, t2.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 10)))
-            self.screen.blit(t3, t3.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 50)))
-
-    # ---------------- 입력 처리 & 루프 ----------------
-
-    def reset(self):
-        self.customers.clear()
-        self.coffee_cups.clear()
-        self.money = 0
-        self.reputation = 5
-        self.game_time = 0.0
-        self.spawn_timer = 0.0
-        self.coffee_spawn_timer = 0.0
-        self.player = Player(WIDTH // 2, HEIGHT // 2 + 120)
-        self.game_over = False
-
-    def handle_event(self, event):
-        if self.game_over:
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    self.running = False
-                elif event.key == pygame.K_r:
-                    self.reset()
-            if event.type == pygame.QUIT:
-                self.running = False
-            return
-
+# ------------------ 메인 루프 ------------------
+while running:
+    for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            self.running = False
-            return
+            running = False
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
-                self.running = False
-            # 커피 줍기 (머신 앞 컵)
-            if event.key == pygame.K_SPACE:
-                self.player_pick_coffee()
-            # 손님에게 서빙
-            if event.key == pygame.K_f:
-                self.serve_customer()
+                running = False
 
-    def run(self):
-        while self.running:
-            dt = self.clock.tick(FPS) / 1000.0
+            if not game_over:
+                if event.key == pygame.K_SPACE:
+                    if player.rect.colliderect(MACHINE_RECT.inflate(40, 40)):
+                        pick_cup()
+                if event.key == pygame.K_f:
+                    serve()
 
-            for event in pygame.event.get():
-                self.handle_event(event)
+            else:
+                if event.key == pygame.K_RETURN:
+                    game_over = False
+                    money = 0
+                    lives = 5
+                    score = 0
+                    player.rect.center = (WIDTH//2, HEIGHT//2 + 120)
+                    player.held_coffee = None
 
-            self.update(dt)
-            self.draw()
+                    for s in list(customer_group): s.kill()
+                    for s in list(cup_group): s.kill()
 
-            pygame.display.flip()
+                    customer_spawn_timer = 0
+                    cup_spawn_timer = 0
 
-        pygame.quit()
-        sys.exit()
+                    # ✅ 시간 리셋
+                    time_left_frames = TOTAL_TIME_SEC * 60
 
+    if not game_over:
+        all_sprites.update()
 
-if __name__ == "__main__":
-    game = Game()
-    game.run()
+        # ✅ 전체 시간 감소
+        time_left_frames -= 1
+        if time_left_frames <= 0:
+            game_over = True
+
+        # 손님 스폰
+        customer_spawn_timer += 1
+        if customer_spawn_timer >= CUSTOMER_SPAWN_INTERVAL:
+            customer_spawn_timer = 0
+            if len([c for c in customer_group if c.state != "leaving"]) < 3:
+                spawn_customer(customer_group, all_sprites)
+
+        # 컵 스폰
+        cup_spawn_timer += 1
+        if cup_spawn_timer >= CUP_SPAWN_INTERVAL:
+            cup_spawn_timer = 0
+            spawn_cup(cup_group, all_sprites)
+
+        # ✅ 타임아웃 손님 -> 목숨 감소(1회) + 화면 밖 제거
+        for c in list(customer_group):
+            if c.state == "leaving" and not c.left_happy and not c.timeout_penalized:
+                if c.wait_frames >= c.max_wait_frames:
+                    lives -= 1
+                    c.timeout_penalized = True
+
+            if c.rect.left > WIDTH + 80:
+                c.kill()
+
+        # ✅ 목숨 0이면 게임오버
+        if lives <= 0:
+            game_over = True
+
+    # ------------------ 그리기 ------------------
+    screen.fill(FLOOR)
+
+    # 카운터
+    pygame.draw.rect(screen, BROWN, (0, HEIGHT//2 + 60, WIDTH, 30))
+
+    # 머신
+    pygame.draw.rect(screen, DARK_GRAY, MACHINE_RECT, border_radius=8)
+    pygame.draw.rect(screen, BLACK, MACHINE_RECT, 2, border_radius=8)
+    screen.blit(font.render("MACHINE", True, WHITE),
+                font.render("MACHINE", True, WHITE).get_rect(center=MACHINE_RECT.center))
+
+    # 스프라이트(플레이어/손님/컵)
+    all_sprites.draw(screen)
+
+    # 컵 라벨(A/T/D/C)
+    for cup in cup_group:
+        cup.draw_label(screen)
+
+    # 손님 말풍선
+    for c in customer_group:
+        c.draw_bubble(screen)
+
+    # ✅ 코인(목숨) UI 추가
+    coin_y = 14
+    coin_r = 9
+    for i in range(5):
+        cx = 12 + i * 24
+        if i < lives:
+            pygame.draw.circle(screen, (255, 205, 70), (cx, coin_y), coin_r)
+            pygame.draw.circle(screen, (150, 110, 30), (cx, coin_y), coin_r, 2)
+        else:
+            pygame.draw.circle(screen, (210, 210, 210), (cx, coin_y), coin_r)
+            pygame.draw.circle(screen, (120, 120, 120), (cx, coin_y), coin_r, 2)
+
+    # UI
+    held = player.held_coffee if player.held_coffee else "없음"
+    time_sec = max(0, time_left_frames // 60)
+    ui = font.render(f"돈:{money}  서빙:{score}  남은시간:{time_sec}s  들고있는음료:{held}", True, BLACK)
+    screen.blit(ui, (10, 28))
+
+    guide = font.render("SPACE: 머신에서 컵 줍기(근처) / F: 손님 서빙 / Enter: 재시작", True, BLACK)
+    screen.blit(guide, (10, 50))
+
+    if game_over:
+        overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 150))
+        screen.blit(overlay, (0, 0))
+        t = font_big.render("GAME OVER (Press Enter)", True, WHITE)
+        screen.blit(t, t.get_rect(center=(WIDTH//2, HEIGHT//2)))
+        t2 = font.render(f"최종 돈:{money}  목숨:{lives}  서빙:{score}", True, WHITE)
+        screen.blit(t2, t2.get_rect(center=(WIDTH//2, HEIGHT//2 + 40)))
+
+    pygame.display.flip()
+    clock.tick(60)
+
+pygame.quit()
