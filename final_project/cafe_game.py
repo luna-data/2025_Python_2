@@ -26,12 +26,6 @@ clock = pygame.time.Clock()
 WHITE = (255,255,255)
 BLACK = (0,0,0)
 
-pygame.mixer.init()
-
-BGM_PATH = os.path.join(base_dir, "bgm.wav")  # 파일명 맞추기
-pygame.mixer.music.load(BGM_PATH)
-pygame.mixer.music.play(-1) 
-
 #폰트 적용이 안되어서 이 코드로 폰트 적용하기!
 pygame.font.init()
 
@@ -43,6 +37,13 @@ font_big = pygame.font.Font(FONT_PATH, 40)
 bg_path=os.path.join(base_dir, "background.png")
 bg_image=pygame.image.load(bg_path).convert()
 bg_image=pygame.transform.scale(bg_image, (WIDTH,HEIGHT))
+
+sound_path=os.path.join(base_dir,"gamemusic.wav")
+sound=pygame.mixer.Sound(sound_path)
+print("sound_path =", sound_path)
+print("exists =", os.path.exists(sound_path))
+
+#sound.play()
 
 class Player(pygame.sprite.Sprite):
   def __init__(self):
@@ -77,15 +78,16 @@ for i in coffee:
 
 class Coffee(pygame.sprite.Sprite):
     TYPE=None # 자식클래스에서 각각 지정할 예정
-    def __init__(self, x, y):
+    def __init__(self, x, y,slot):
         super().__init__()
-    
         if self.TYPE is None: #타입 지정하지 않을 시 에러 날 수 있게 합니다
             raise ValueError("coffee TYPE 이 자식클래스에서 반드시 정의되어야 합니다!!")
+        
         #딕셔너리 이용해서 이미지 연결할 때 사용
         self.image=coffee_images[self.TYPE]
         self.rect=self.image.get_rect()
         self.rect.topleft=(x,y)
+        self.slot=slot
 
         self.speed_x = 0                 
         self.speed_y = 0     
@@ -176,6 +178,39 @@ class Customer(pygame.sprite.Sprite):
         pygame.draw.rect(surf,BLACK,bubble,1,border_radius=6)
         surf.blit(txt,(bubble.x+5,bubble.y+3))
 
+class Machine:
+    def __init__(self,rect,drink_c,type_group,all_sprites,all_drink_group,cap=5):
+        self.rect=rect
+        self.drink_c=drink_c
+        self.type_group=type_group
+        self.all_sprites=all_sprites
+        self.all_drink_group=all_drink_group
+        self.cap=cap
+
+    def can_spawn(self):
+        return len(self.type_group)<self.cap
+    
+    def spawn(self):
+        if not self.can_spawn():
+            return None
+        
+        used_slots = {d.slot for d in self.type_group}
+        slot=None
+        for i in range(self.cap):
+            if i not in used_slots:
+                slot=i
+                break
+        if slot is None:
+            return None
+        
+        x=self.rect.x+10+slot*55
+        y=self.rect.bottom+5
+
+        drink=self.drink_c(x,y,slot)
+        self.type_group.add(drink)
+        self.all_sprites.add(drink)
+        self.all_drink_group.add(drink)
+        return drink
 
 #커피 머신 시작 (x,y,width,height)
 M1=pygame.Rect(70,430,150,60)
@@ -209,29 +244,7 @@ PRICE={
 }
 
 
-class Machine:
-    def __init__(self,rect,drink_c,type_group,all_sprites,all_drink_group,cap=5):
-        self.rect=rect
-        self.drink_c=drink_c
-        self.type_group=type_group
-        self.all_sprites=all_sprites
-        self.all_drink_group=all_drink_group
-        self.cap=cap
 
-    def can_spawn(self):
-        return len(self.type_group)<self.cap
-    def spawn(self):
-        if not self.can_spawn():
-            return None
-        idx=len(self.type_group)
-        x=self.rect.x+10+idx*55
-        y=self.rect.bottom+5
-
-        drink=self.drink_c(x,y)
-        self.type_group.add(drink)
-        self.all_sprites.add(drink)
-        self.all_drink_group.add(drink)
-        return drink
 
 machines=[
     Machine(M1,Americano,a_group,all_sprites,coffee_group,cap=3),
@@ -266,7 +279,7 @@ spawn_timer = 0
 spawn_index = 0
 
 def spawn_all_coffee_every_3s():
-    global spawn_timer, spawn_index
+    global spawn_timer
     spawn_timer += 1
     if spawn_timer < SPAWN_INTERVAL_FRAMES:
         return
