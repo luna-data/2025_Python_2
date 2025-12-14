@@ -503,7 +503,7 @@ while running:
         screen.blit(t1, t1.get_rect(center=(WIDTH//2, HEIGHT//2 - 60)))
         screen.blit(t2, t2.get_rect(center=(WIDTH//2, HEIGHT//2 - 30)))
         screen.blit(t3, t3.get_rect(center=(WIDTH//2, HEIGHT//2 + 30)))
-        #screen.blit(t4, t4.get_rect(center=(WIDTH//2, HEIGHT//2 + 60)))
+        screen.blit(t4, t4.get_rect(center=(WIDTH//2, HEIGHT//2 + 60)))
 
     elif game_state == "gameover":
         overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
