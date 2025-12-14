@@ -1,0 +1,15 @@
+from tkinter import *
+
+root=Tk() #tk 윈도우 생성하는거
+
+#아이디 레이블 생성하고 배치하는건데, 문제에서 요구하는 칸을 다 그려논 뒤 맨위 왼쪽부터 0임! 그 양옆 다 1
+Label(root, text="아이디").grid(row=0)
+
+#우선 root, 해주고 글씨 선택하고 어디로 가게 할건지, 로그인 눌었을떄 어떤거 나오게 할건지 command에 함수지정
+#sticky는 N(북), S(남), E(동), 에 위치하는거 정하는거라 여기는 w 이므로 서쪽!! pady는 간격을 의미함
+이렇게 하면 로그인 화면에 로그인 버튼이 만들어짐
+Button(root, text="로그인", command=print_fields).grid(row=3,column=0,sticky="w",pady=4)
+ 
+
+#가장 중요한거는 이벤트 루프 시작하는거
+root.mainloop() 이거 안하면 아무일도 안일어남!

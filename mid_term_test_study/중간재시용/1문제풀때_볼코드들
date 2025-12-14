@@ -1,0 +1,97 @@
+코드작성할 예정
+!!!
+from tkinter imoprt * 
+root=Tk()
+root.mainloop() !!#important
+
+윈도우, 기본창, 최상위 컨테이너, 
+root=Tk()
+root.title("윈도우 제목")
+root.geometry("400x500") #윈도우 크기
+
+캔버스, 그래픽영역(도형,그리기,이미지 배치), 그래픽 도화지
+canvas=Canvas(root,wodth=100,height=200)
+
+텍스트생성
+text=Text(root,width=60,height=10)
+text.pack()
+
+모든 버튼! 버튼 누르면 어떤 함수로 이동할떄 command=함수이름
+button=Button(root,text="ddd",command=함수이름)
+button.pack() or button.grid(row=0,column=1)
+
+버튼생성 (체크, 라디오)
+choice=IntVar()
+Radiobutton(root,text="fff",padx=10,variable=choice,value=1).pack()
+
+value1=IntVar()
+Checkbutton(root,text="ff",variable=value1).grid(row=1, sticky=W)
+
+배치할 때 grid, pack
+pack -> 수평, 수직, pady,padx
+widget.pack(side="top")
+
+grid -> 표 그리드 형식으로 배치, 행과 열을 이용함.
+Widegt.grid(row=0.column=0)
+rowspan, columnspan 이용법
+
+place ->위젯 직접 위치,  (x,y) 좌표 이용해 위치 지정, 고정크기 및 위치 필요할때 사용
+widget.place(x=100,y=40)
+
+이미지-> 코드 작성하는 방법 2가지정도
+#img = PhotoImage(file="D:\\car1.png")
+#canvas.create_image(20, 20, anchor=NW, image=img)
+canvas 만들고 그 위에 불러오는 방법
+
+
+
+
+도형 어떻게 그리는지 
+root.create_rectangle(50,50,200,100,fill="blue")
+create_oval
+create_text(200,100, text='Hello World!', fill='blue', font=('Courier', 30))
+create_line
+create_arc
+
+(x1, y1), (x2, y2), (x3, y3) ... → 꼭짓점좌표
+fill → 내부색
+outline → 테두리색
+width → 테두리두께
+smooth=True → 곡선다각형으로부드럽게
+
+애니메이션 움직이는거
+
+색변하는거
+
+Label, Entry 차이 및 배치하는거
+레이블 -> 텍스트나 이미지 표시하는데 사용, 레이블 위젯이 표시하는 텍스트는 사용자 편집불가
+이미지 표시 가능, PhotoImage 클래스 사용해 이미지 읽고 레이블 생성시 매개변수 Image 통해 전달함
+
+#entry-> 이름, 아이디, 이메일 같이 사용자로부터 한줄 텍스트 가져와야할때 사용함. 입력창!!
+entry=Entry(root)
+entry.pack()
+
+______________________________________-
+클래스
+!!! 다형성 
+상속 #self는 따로 안씀
+##!!super().__init__(name,major)
+
+다형성
+
+인스턴스변수, 매개변수, 지역변수, 전역변수
+#인스턴스변수-> 클래스안에 선언된 변수, self.~~
+#지역변수 함수안에서 선언
+#전역변수 함수외부에서 선언
+#매개변수 인스턴스 변수self. 붙기전 self,name,major 등
+
+#initValue=0 이런식으로 사용하는거=> 디폴트 인수사용하는거, 매개변수에 기본값을 줄 수있는 기능 
+보통 계좌에서 사용함 
+
+클래스 변수 / 모든객체 통틀어 하나만 생성됨. 모든 객체에 공통인변수
+
+#Class Television
+serialNumber=0, 
+#def __init__(self, ~~):
+    Television.serialNumber+=1 이렇게 사용함. 
+    self.~~=~~
