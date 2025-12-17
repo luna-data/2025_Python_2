@@ -313,7 +313,7 @@ def spawn_all_coffee_every_3s():
 
 #손님 생성 타이머로 빠르게 게임을 하고싶다면 이부분을 더 짧게 바꾸기
 customer_timer = 1
-CUSTOMER_INTERVAL = 180  #커피 생성 속도와 같은 3초로 설정, 이부분을 늘리면 더 빨라짐
+CUSTOMER_INTERVAL = 300 #커피 생성 속도와 같은 3초로 설정, 이부분을 늘리면 더 빨라짐
 
 #플레이어가 들고 있는 음료 저장
 player.held = None
