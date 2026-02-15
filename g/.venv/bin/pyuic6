@@ -1,8 +1,0 @@
-#!/bin/sh
-'''exec' "/Users/hongbinimacbook/Downloads/대학교 1학년 2학기/python_vscode/g/.venv/bin/python" "$0" "$@"
-' '''
-import sys
-from PyQt6.uic.pyuic import main
-if __name__ == '__main__':
-    sys.argv[0] = sys.argv[0].removesuffix('.exe')
-    sys.exit(main())
